@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vox剪辑风格"
+  short_description: "真人口播 Vox 分层拼贴、语义 MG、字幕与声音验收"
+  default_prompt: "使用 $vox-editing-style 处理这条真人口播：先完成资料审核和分层场景清单校验，再制作可独立控制的 Vox 拼贴、MG 动画、字幕与声音。"
