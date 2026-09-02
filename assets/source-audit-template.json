@@ -1,0 +1,52 @@
+{
+  "schema": "vox-source-audit/v1",
+  "project_name": "",
+  "source_mode": "local_files",
+  "public_source_urls": [],
+  "duration_seconds": 0,
+  "review_script": "",
+  "source_artifacts": [
+    {"id": "source-video", "role": "source_video", "path": "", "sha256": ""},
+    {"id": "captions", "role": "srt", "path": "", "sha256": ""},
+    {"id": "default-bgm", "role": "bgm", "path": "", "sha256": ""}
+  ],
+  "creator_identity": {
+    "creator_name": "",
+    "account_name": "",
+    "must_preserve": [],
+    "must_not_substitute": []
+  },
+  "content_intent": "",
+  "content_plan": {
+    "opening_candidates": [],
+    "selected_opening": "",
+    "three_second_check": {"status": "pending", "evidence": "", "risk": ""},
+    "mid_hooks": [],
+    "conclusion": "",
+    "cta": "",
+    "persona_timing": [],
+    "motion_layers": []
+  },
+  "sound_direction": {
+    "bgm_enabled": true,
+    "emotion": "",
+    "energy_curve": "",
+    "must_avoid": [],
+    "selection_rule": "只按文案语意和语义事件选择"
+  },
+  "semantic_units": [
+    {
+      "id": "",
+      "time": [0, 0],
+      "transcript_exact": "",
+      "takeaway": "",
+      "must_preserve": [],
+      "must_not_invent": [],
+      "sound_plan": {"bgm_role": "", "emotion": "", "sfx_events": []}
+    }
+  ],
+  "reference_decisions": [],
+  "uncertainties": [],
+  "asset_gaps": [],
+  "approval": {"status": "draft", "approved_by": "", "approved_at": ""}
+}

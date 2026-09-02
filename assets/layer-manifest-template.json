@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "project_id": "replace-me",
+  "approval": {
+    "status": "draft"
+  },
+  "scenes": [
+    {
+      "id": "scene-01",
+      "timecode": "00:00.000-00:03.000",
+      "base_mode": "collage_main_with_presenter",
+      "mg_task_file": "production/mg/scene-01.md",
+      "remotion_component": "src/scenes/Scene01.tsx",
+      "layers": [
+        {
+          "id": "paper-background",
+          "role": "background",
+          "source_kind": "image",
+          "source": "public/layers/scene-01/paper-background.png",
+          "semantic_function": "建立场景材质与空间",
+          "contains_complete_composition": false,
+          "entry": "开场已在场",
+          "relation": "承接其他纸层",
+          "settle": "保持稳定",
+          "exit": "接力到下一镜"
+        },
+        {
+          "id": "relationship-structure",
+          "role": "structure",
+          "source_kind": "image",
+          "source": "public/layers/scene-01/relationship-structure.png",
+          "semantic_function": "建立关系结构",
+          "contains_complete_composition": false,
+          "entry": "分层进入",
+          "relation": "与主物件建立连接",
+          "settle": "关系清晰可读",
+          "exit": "拆解并接力"
+        },
+        {
+          "id": "semantic-subject",
+          "role": "subject",
+          "source_kind": "cutout",
+          "source": "public/layers/scene-01/semantic-subject.png",
+          "semantic_function": "承载主要视觉结论",
+          "contains_complete_composition": false,
+          "entry": "进入视觉中心",
+          "relation": "完成观点",
+          "settle": "停留阅读",
+          "exit": "退出或转场"
+        }
+      ]
+    }
+  ]
+}
