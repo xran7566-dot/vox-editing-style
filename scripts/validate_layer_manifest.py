@@ -30,6 +30,34 @@ def resolve(root, value):
     return path if path.is_absolute() else root / path
 
 
+def validate_public_stock_record(root, layer, layer_prefix, errors):
+    record_value = str(layer.get("asset_record", "")).strip()
+    if not record_value:
+        errors.append(layer_prefix + "公共素材缺少 asset_record")
+        return
+    record_path = resolve(root, record_value)
+    if not record_path.is_file():
+        errors.append(layer_prefix + f"公共素材来源记录不存在: {record_value}")
+        return
+    try:
+        record = json.loads(record_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(layer_prefix + f"无法读取公共素材来源记录: {exc}")
+        return
+    if record.get("schema") != "vox-public-asset-record/v1" or record.get("status") != "qualified":
+        errors.append(layer_prefix + "公共素材来源记录未通过 qualified 状态")
+    if record.get("provider") != "pixabay" or not str(record.get("provider_page_url", "")).startswith("https://pixabay.com/"):
+        errors.append(layer_prefix + "公共素材来源记录缺少 Pixabay HTTPS 来源页")
+    source_path = resolve(root, layer.get("source", "")).resolve()
+    record_asset = Path(str(record.get("asset_path", ""))).expanduser().resolve()
+    if source_path != record_asset:
+        errors.append(layer_prefix + "素材路径与 asset_record 不一致")
+    if record.get("layer_role") != layer.get("role"):
+        errors.append(layer_prefix + "素材职责与 asset_record 不一致")
+    if not record.get("licence_checked") or not str(record.get("semantic_reason", "")).strip():
+        errors.append(layer_prefix + "公共素材未完成许可或语义核对")
+
+
 def main():
     parser = argparse.ArgumentParser(description="校验 Vox 多图层场景清单")
     parser.add_argument("manifest")
@@ -106,6 +134,8 @@ def main():
 
             if source and not source.startswith(("inline:", "generated:")) and not resolve(root, source).exists():
                 errors.append(layer_prefix + f"素材不存在: {source}")
+            if layer.get("origin") == "public_stock":
+                validate_public_stock_record(root, layer, layer_prefix, errors)
 
             if role in VISUAL_ROLES and layer.get("contains_complete_composition") is not True:
                 if source in seen_sources:

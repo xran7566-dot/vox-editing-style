@@ -1,0 +1,16 @@
+{
+  "schema": "vox-public-asset-record/v1",
+  "status": "qualified",
+  "provider": "pixabay",
+  "provider_page_url": "",
+  "asset_path": "",
+  "sha256": "",
+  "material_type": "image",
+  "layer_role": "",
+  "semantic_reason": "",
+  "timecode": "",
+  "licence_checked": true,
+  "adaptation": "",
+  "rejected_risks": [],
+  "downloaded_at": ""
+}

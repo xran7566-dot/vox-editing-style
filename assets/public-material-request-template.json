@@ -1,0 +1,14 @@
+{
+  "schema": "vox-public-material-request/v1",
+  "project_id": "",
+  "scene_id": "",
+  "timecode": "",
+  "material_type": "image",
+  "layer_role": "",
+  "semantic_reason": "",
+  "search_query": "",
+  "must_include": [],
+  "must_avoid": [],
+  "fallback": "director_generated",
+  "approved_by": ""
+}
