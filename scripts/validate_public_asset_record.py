@@ -19,7 +19,7 @@ def main() -> int:
     try:
         record_path = Path(args.record).expanduser().resolve()
         record = json.loads(record_path.read_text(encoding="utf-8"))
-        required = ("schema", "status", "provider", "provider_page_url", "asset_path", "sha256", "material_type", "layer_role", "semantic_reason", "timecode", "licence_checked", "adaptation", "rejected_risks", "downloaded_at")
+        required = ("schema", "status", "provider", "provider_page_url", "download_url", "asset_path", "sha256", "material_type", "layer_role", "semantic_reason", "timecode", "license_note", "licence_checked", "adaptation", "rejected_risks", "downloaded_at")
         missing = [key for key in required if key not in record]
         if missing:
             fail(f"缺少字段: {', '.join(missing)}")
@@ -27,8 +27,19 @@ def main() -> int:
             fail("schema 必须为 vox-public-asset-record/v1")
         if record["status"] != "qualified":
             fail("只有 qualified 公共素材可以进入分层清单")
-        if record["provider"] != "pixabay" or not str(record["provider_page_url"]).startswith("https://pixabay.com/"):
-            fail("当前记录必须保留 Pixabay HTTPS 来源页")
+        provider = str(record["provider"])
+        page_url = str(record["provider_page_url"])
+        expected_prefixes = {
+            "pexels_api": "https://www.pexels.com/",
+            "pixabay_api": "https://pixabay.com/",
+            "pixabay_web": "https://pixabay.com/",
+        }
+        if provider not in expected_prefixes:
+            fail("provider 必须为 pexels_api、pixabay_api 或 pixabay_web")
+        if not page_url.startswith(expected_prefixes[provider]):
+            fail("来源页必须与 provider 对应且使用 HTTPS")
+        if not str(record["download_url"]).startswith("https://"):
+            fail("download_url 必须为 HTTPS URL")
         asset = Path(str(record["asset_path"])).expanduser().resolve()
         if not asset.is_file():
             fail(f"素材文件不存在: {asset}")
@@ -39,7 +50,7 @@ def main() -> int:
             fail("material_type 无效")
         if not isinstance(record["rejected_risks"], list) or not record["licence_checked"]:
             fail("必须完成许可核对并记录风险筛查")
-        for key in ("layer_role", "semantic_reason", "timecode", "adaptation", "downloaded_at"):
+        for key in ("layer_role", "semantic_reason", "timecode", "license_note", "adaptation", "downloaded_at"):
             if not isinstance(record[key], str) or not record[key].strip():
                 fail(f"{key} 必须为非空文字")
         print(f"PASS: 公共素材来源记录有效: {record_path}")

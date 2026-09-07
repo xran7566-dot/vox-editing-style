@@ -44,7 +44,7 @@ def validate_public_stock_record(root, layer, layer_prefix, errors):
     except (OSError, json.JSONDecodeError) as exc:
         errors.append(layer_prefix + f"无法读取公共素材记录: {exc}")
         return
-    for field in ("source_page_url", "download_url", "license_note", "downloaded_at", "sha256", "semantic_use", "layer_role"):
+    for field in ("provider", "provider_page_url", "download_url", "license_note", "downloaded_at", "sha256", "semantic_reason", "layer_role"):
         if not str(data.get(field, "")).strip():
             errors.append(layer_prefix + f"公共素材记录缺少 {field}")
     if str(data.get("status", "")).strip() != "qualified":

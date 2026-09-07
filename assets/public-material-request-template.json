@@ -4,6 +4,8 @@
   "scene_id": "",
   "timecode": "",
   "material_type": "image",
+  "selected_provider": "",
+  "fallback_provider": "",
   "layer_role": "",
   "semantic_reason": "",
   "search_query": "",
