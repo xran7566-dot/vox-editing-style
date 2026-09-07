@@ -29,15 +29,10 @@ def main() -> int:
             fail("只有 qualified 公共素材可以进入分层清单")
         provider = str(record["provider"])
         page_url = str(record["provider_page_url"])
-        expected_prefixes = {
-            "pexels_api": "https://www.pexels.com/",
-            "pixabay_api": "https://pixabay.com/",
-            "pixabay_web": "https://pixabay.com/",
-        }
-        if provider not in expected_prefixes:
-            fail("provider 必须为 pexels_api、pixabay_api 或 pixabay_web")
-        if not page_url.startswith(expected_prefixes[provider]):
-            fail("来源页必须与 provider 对应且使用 HTTPS")
+        if provider != "pixabay_web":
+            fail("当前 Vox 公共素材 provider 必须为 pixabay_web；API 接口尚未接通")
+        if not page_url.startswith("https://pixabay.com/"):
+            fail("来源页必须是 Pixabay HTTPS 页面")
         if not str(record["download_url"]).startswith("https://"):
             fail("download_url 必须为 HTTPS URL")
         asset = Path(str(record["asset_path"])).expanduser().resolve()

@@ -1,7 +1,7 @@
 {
   "schema": "vox-public-asset-record/v1",
   "status": "qualified",
-  "provider": "",
+  "provider": "pixabay_web",
   "provider_page_url": "",
   "download_url": "",
   "asset_path": "",
