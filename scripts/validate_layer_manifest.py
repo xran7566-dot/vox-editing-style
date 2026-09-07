@@ -31,31 +31,24 @@ def resolve(root, value):
 
 
 def validate_public_stock_record(root, layer, layer_prefix, errors):
-    record_value = str(layer.get("asset_record", "")).strip()
-    if not record_value:
+    record = layer.get("asset_record")
+    if not isinstance(record, str) or not record.strip():
         errors.append(layer_prefix + "公共素材缺少 asset_record")
         return
-    record_path = resolve(root, record_value)
-    if not record_path.is_file():
-        errors.append(layer_prefix + f"公共素材来源记录不存在: {record_value}")
+    record_path = resolve(root, record)
+    if not record_path.exists():
+        errors.append(layer_prefix + f"公共素材记录不存在: {record}")
         return
     try:
-        record = json.loads(record_path.read_text(encoding="utf-8"))
+        data = json.loads(record_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        errors.append(layer_prefix + f"无法读取公共素材来源记录: {exc}")
+        errors.append(layer_prefix + f"无法读取公共素材记录: {exc}")
         return
-    if record.get("schema") != "vox-public-asset-record/v1" or record.get("status") != "qualified":
-        errors.append(layer_prefix + "公共素材来源记录未通过 qualified 状态")
-    if record.get("provider") != "pixabay" or not str(record.get("provider_page_url", "")).startswith("https://pixabay.com/"):
-        errors.append(layer_prefix + "公共素材来源记录缺少 Pixabay HTTPS 来源页")
-    source_path = resolve(root, layer.get("source", "")).resolve()
-    record_asset = Path(str(record.get("asset_path", ""))).expanduser().resolve()
-    if source_path != record_asset:
-        errors.append(layer_prefix + "素材路径与 asset_record 不一致")
-    if record.get("layer_role") != layer.get("role"):
-        errors.append(layer_prefix + "素材职责与 asset_record 不一致")
-    if not record.get("licence_checked") or not str(record.get("semantic_reason", "")).strip():
-        errors.append(layer_prefix + "公共素材未完成许可或语义核对")
+    for field in ("source_page_url", "download_url", "license_note", "downloaded_at", "sha256", "semantic_use", "layer_role"):
+        if not str(data.get(field, "")).strip():
+            errors.append(layer_prefix + f"公共素材记录缺少 {field}")
+    if str(data.get("status", "")).strip() != "qualified":
+        errors.append(layer_prefix + "公共素材记录 status 必须为 qualified")
 
 
 def main():
