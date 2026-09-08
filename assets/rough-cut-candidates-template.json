@@ -1,0 +1,21 @@
+{
+  "schema": "vox-rough-cut-candidates/v1",
+  "source_video": "",
+  "source_sha256": "",
+  "duration_seconds": 0,
+  "semantic_review": "pending",
+  "approval": {"status": "draft", "approved_by": "", "approved_at": ""},
+  "items": [
+    {
+      "id": "",
+      "time": [0, 0],
+      "category": "long_silence",
+      "reason": "",
+      "confidence": "high",
+      "keep_before_seconds": 0,
+      "keep_after_seconds": 0,
+      "status": "pending"
+    }
+  ],
+  "protected_categories": ["small_breath", "natural_pause", "emotional_pause"]
+}

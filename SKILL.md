@@ -10,9 +10,9 @@ description: 制作或审核保留原声与人物表达的 Vox/编导型口播�
 ## 轻量路由
 
 - **A 素材接收**：确认素材、成片画幅、原声、SRT、参考范围和缺口。只读本文件；用户要看全流程时读 [端到端流程](references/vox-editing-workflow.md)。
-- **B 本地预处理**：媒体探测、字幕生成/导入、粗剪候选。用户提供参考视频且明确同意云端拉片时，才读 [CineSleuth 适配器](references/cine-sleuth-adapter.md)；只运行对应本地脚本或适配器；不读 Director、MG、内容审核和渲染资料。
-- **C 内容与大纲**：读 [内容编导](references/vox-content.md) 和 [原始资料审核](references/source-audit-contract.md)；审核获批后才读 [剪辑执行大纲](references/edit-execution-outline.md)。
-- **D 视觉方案**：读 [Director 集成](references/director-integration.md) 和 [主生成路径](references/director-first-route.md)；需要选择或校验视觉分支、系列锚点时再读 [视觉系统](references/visual-system.md)；只有执行大纲明确需要公共素材时才读 [公共素材来源](references/public-material-source.md)；只有此时才读 `vendor/vox-director/SKILL.md`。
+- **B 本地预处理**：媒体探测、字幕生成/导入、粗剪候选。需转写或粗剪时读 [本地转写与口播粗剪](references/local-transcription-and-rough-cut.md)。用户提供参考视频且明确同意云端拉片时，才读 [CineSleuth 适配器](references/cine-sleuth-adapter.md)；只运行对应本地脚本或适配器；不读 Director、MG、内容审核和渲染资料。
+- **C 内容与大纲**：读 [内容编导](references/vox-content.md) 和 [原始资料审核](references/source-audit-contract.md)；审核获批后读 [执行大纲](references/edit-execution-outline.md) 与 [视觉编导](references/visual-direction.md)，按需核对 Director/镜头制作能力后提交大纲确认。
+- **D 视觉制作**：读 [Director 集成](references/director-integration.md) 和 [主生成路径](references/director-first-route.md)；需要选择视觉分支时读 [视觉系统](references/visual-system.md)；需公共素材时读 [Pexels / Pixabay 来源](references/public-material-source.md)。C 阶段核对能力或本阶段制作时才按需读 Director；镜头制作走 [内置接入](references/shotcraft-integration.md)，只读所选卡、模板和代码。
 - **E 分层动画**：读 [分层场景](references/layered-scene-contract.md)；复杂关系再读 [MG 任务单](references/mg-task-card.md)；涉及字幕、进度或声音再读 [字幕·动画·声音](references/subtitle-motion-sound.md)。
 - **F 预览与验收**：读 [审批与验收](references/approval-and-qc.md)；只有发生已知复发问题时才读 [防错闸门](references/recurring-failure-gates.md)。
 

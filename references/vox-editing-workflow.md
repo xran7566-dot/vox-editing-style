@@ -3,14 +3,16 @@
 ```mermaid
 flowchart TD
     A[用户提交素材] --> B{输入类型}
-    B -->|原视频 + SRT| C[校验原声与 SRT]
-    B -->|只有原视频| D[本地语音转录生成临时 SRT]
-    B -->|原视频 + 文稿| E[原声校正文稿并生成时间码]
+    B -->|原视频 + SRT| C[锁定用户 SRT]
+    B -->|只有原视频| D[faster-whisper 生成 draft.srt]
+    B -->|原视频 + 文稿| E[原声对齐文稿并生成 draft.srt]
     B -->|语音 + 文案| F[语音对齐文案，进入音频驱动模式]
-    D --> C
-    E --> C
-    F --> G[VOX-CONTENT 内容拆解]
-    C --> G
+    D --> H0[用户修改并确认 approved.srt]
+    E --> H0
+    H0 --> C
+    F --> H0
+    C --> C1[按需 Auto-Editor 长静音候选；试听大气口与语义粗剪建议]
+    C1 --> G[VOX-CONTENT 内容理解]
     G --> H[语义分段与功能标注]
     H --> I[开头候选评分与前三秒检查]
     I --> J[中段钩子、结论、CTA规划]
@@ -18,14 +20,19 @@ flowchart TD
     K --> L[生成 content-direction.md]
     L --> M[编导内容审核：检查钩子/三秒/节奏/结构]
     M --> N[source-audit 原始资料审核]
-    N --> O[生成 source-review.md + source-audit.json]
+    N --> O[生成 source-review.md + source-audit.json + 粗剪候选]
     O --> P{用户审核}
     P -->|需修改| G
-    P -->|通过| Q[Director 视觉方案与关键帧]
+    P -->|通过| P0[视觉编导草案：Director 视觉语言 + 镜头制作镜头/模板]
+    P0 --> P01[核对所选资产、代码、依赖和时长可实现性]
+    P01 --> P1[完善时间码执行大纲：构图、图层、动作、衔接、声音]
+    P1 --> P2{用户确认执行大纲}
+    P2 -->|需修改| G
+    P2 -->|通过| Q[Director 指导资产生产；按需 Pexels/Pixabay 补素材]
     Q --> R[Remotion 预览合成]
-    R --> S[按语义节点抽取预览关键帧/短片段]
+    R --> S[实际多图层合成：语义关键帧 + 动态预览]
     S --> T[编导内容审核：检查关键帧/动效是否表达内容]
-    T --> U{关键帧通过}
+    T --> U{用户批准关键帧与动态预览}
     U -->|不通过| Q
     U -->|通过| V[Remotion 执行完整时间轴]
     V --> W[字幕、进度、转场、BGM、音效]
@@ -35,7 +42,7 @@ flowchart TD
     Z --> AA{验收}
     AA -->|不通过| AB[局部返工并回到对应节点]
     AB --> V
-    AA -->|通过| AC[交付视频与审核记录]
+    AA -->|通过| AC[交付视频、可编辑工程、素材记录和预览入口]
 ```
 
 ## 各模块职责
@@ -45,6 +52,7 @@ flowchart TD
 | 输入路由 | 判断素材组合，生成或校验时间字幕 | 临时 SRT / 对齐记录 |
 | VOX-CONTENT | 理解内容并规划钩子、节奏、真人和动效 | `content-direction.md` |
 | source-audit | 核对来源、时间、事实、素材指纹并等待批准 | `source-review.md`、`source-audit.json` |
-| Director | 把已确认语义转成画面、组件和运动方案 | 视觉方案、关键帧 |
+| 视觉编导 | Director 视觉语言结合内置镜头制作的模板、构图及运动能力 | 一份时间码执行大纲 |
+| 资产生产 | 按 Director 规则生图，按需网站选材；不擅自调用付费 API | 可独立控制的资产、来源记录 |
 | Remotion 执行 | 合成真人、拼贴、字幕、动画和声音 | 渲染视频 |
 | QC | 检查可读性、同步、音量、画面和安全区 | 验收记录 |

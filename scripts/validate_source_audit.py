@@ -6,12 +6,15 @@ import hashlib
 import json
 import sys
 from pathlib import Path
+from local_preprocess import build_timeline
 
 SCHEMA = "vox-source-audit/v1"
 VALID_SOURCE_MODES = {"local_files", "public_link", "mixed"}
-VALID_ROLES = {"source_video", "srt", "transcript", "screen_recording", "brand_asset", "reference", "bgm"}
+VALID_ROLES = {"source_video", "source_audio", "srt", "transcript", "screen_recording", "brand_asset", "reference", "bgm"}
 VALID_SCOPES = {"scene_solution", "visual_quality", "technical_mechanism", "system_anchor", "needs_user_decision"}
 VALID_ISSUE_STATUS = {"resolved", "accepted", "blocking"}
+VALID_CAPTION_SOURCES = {"user_srt", "user_text_aligned", "faster_whisper"}
+REQUIRED_PROTECTED_CATEGORIES = {"small_breath", "natural_pause", "emotional_pause"}
 
 
 def fail(message: str) -> None:
@@ -50,7 +53,7 @@ def string_list(value: object, label: str, *, allow_empty: bool = True) -> list[
 def validate_audit(doc: dict) -> dict:
     required = (
         "schema", "project_name", "source_mode", "public_source_urls", "duration_seconds",
-        "review_script", "source_artifacts", "creator_identity", "content_intent",
+        "review_script", "source_artifacts", "caption_confirmation", "rough_cut_review", "creator_identity", "content_intent",
         "sound_direction", "semantic_units", "reference_decisions", "uncertainties", "asset_gaps", "approval",
     )
     for key in required:
@@ -95,10 +98,44 @@ def validate_audit(doc: dict) -> dict:
             fail(f"source artifact {artifact_id} fingerprint changed: expected {expected}, got {actual}")
         roles.add(role)
         resolved_artifacts[role] = str(path)
-    if "source_video" not in roles:
-        fail("source_artifacts needs a source_video")
+    if not ({"source_video", "source_audio"} & roles):
+        fail("source_artifacts needs source_video or source_audio")
     if not ({"srt", "transcript"} & roles):
         fail("source_artifacts needs at least one srt or transcript")
+
+    caption = doc["caption_confirmation"]
+    if not isinstance(caption, dict):
+        fail("caption_confirmation must be an object")
+    if caption.get("source") not in VALID_CAPTION_SOURCES:
+        fail("caption_confirmation.source is invalid")
+    approved_srt = local_file(caption.get("approved_srt_path"), "caption_confirmation.approved_srt_path")
+    if "srt" not in roles or str(approved_srt) != resolved_artifacts.get("srt"):
+        fail("caption_confirmation.approved_srt_path must match the audited srt artifact")
+    if caption.get("approved_by") != "user":
+        fail("caption_confirmation.approved_by must be user")
+    text(caption.get("approved_at"), "caption_confirmation.approved_at")
+
+    rough_cut = doc["rough_cut_review"]
+    if not isinstance(rough_cut, dict):
+        fail("rough_cut_review must be an object")
+    candidate_path = local_file(rough_cut.get("candidate_path"), "rough_cut_review.candidate_path")
+    try:
+        candidates = json.loads(candidate_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"rough_cut_review.candidate_path is not valid JSON: {exc}")
+    if candidates.get("schema") != "vox-rough-cut-candidates/v1":
+        fail("rough_cut candidates have invalid schema")
+    if sha256(candidate_path) != rough_cut.get("candidate_sha256"):
+        fail("rough-cut candidate file changed since review")
+    timeline = build_timeline(candidates)
+    if timeline["source_video"] not in {resolved_artifacts.get("source_video"), resolved_artifacts.get("source_audio")}:
+        fail("rough-cut source does not match audited media")
+    if rough_cut.get("status") != "approved" or rough_cut.get("approved_by") != "user":
+        fail("rough_cut_review must be approved by user")
+    text(rough_cut.get("approved_at"), "rough_cut_review.approved_at")
+    protected = set(string_list(rough_cut.get("protected_categories"), "rough_cut_review.protected_categories", allow_empty=False))
+    if not REQUIRED_PROTECTED_CATEGORIES <= protected:
+        fail("rough_cut_review must protect small_breath, natural_pause, and emotional_pause")
 
     identity = doc["creator_identity"]
     if not isinstance(identity, dict):

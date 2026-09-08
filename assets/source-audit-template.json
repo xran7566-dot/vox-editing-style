@@ -10,6 +10,20 @@
     {"id": "captions", "role": "srt", "path": "", "sha256": ""},
     {"id": "default-bgm", "role": "bgm", "path": "", "sha256": ""}
   ],
+  "caption_confirmation": {
+    "source": "user_srt",
+    "approved_srt_path": "",
+    "approved_by": "user",
+    "approved_at": ""
+  },
+  "rough_cut_review": {
+    "candidate_path": "",
+    "candidate_sha256": "",
+    "status": "draft",
+    "approved_by": "",
+    "approved_at": "",
+    "protected_categories": ["small_breath", "natural_pause", "emotional_pause"]
+  },
   "creator_identity": {
     "creator_name": "",
     "account_name": "",
