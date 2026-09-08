@@ -22,7 +22,7 @@ def main() -> int:
         path = Path(sys.argv[1]).expanduser().resolve()
         manifest = json.loads(path.read_text(encoding="utf-8"))
         schema = manifest.get("schema")
-        if schema not in {"vox-talking-head-fusion/v1", "vox-talking-head-fusion/v2"}:
+        if schema not in {"vox-talking-head-fusion/v1", "vox-talking-head-fusion/v2", "vox-talking-head-fusion/v3"}:
             raise ValueError("unsupported manifest schema")
         if manifest.get("production_engine") != "local_remotion":
             raise ValueError("fusion must use local_remotion")
@@ -35,7 +35,9 @@ def main() -> int:
             raise ValueError("fusion project must use director_first route")
         if project.get("watermark") != "disabled":
             raise ValueError("fusion project watermark must be disabled")
-        MODULE.validate(project, require_source_audit=schema == "vox-talking-head-fusion/v2")
+        if schema == 'vox-talking-head-fusion/v3' and 'execution' not in project:
+            raise ValueError('v3 manifest is missing execution timeline')
+        MODULE.validate(project, require_source_audit=schema != "vox-talking-head-fusion/v1", require_execution=schema == "vox-talking-head-fusion/v3")
         print(f"Fusion run check passed: {path}")
         return 0
     except (OSError, ValueError, KeyError, json.JSONDecodeError) as exc:

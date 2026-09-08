@@ -9,13 +9,14 @@ import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from execution_bridge import execution, validate_visual
 
 ROOT = Path(__file__).resolve().parents[1]
 VENDOR = ROOT / "vendor" / "vox-director"
 VALID_ASPECTS = {"9:16", "16:9", "1:1", "3:4", "4:3"}
 VALID_SCOPES = {"scene_solution", "visual_quality", "technical_mechanism", "system_anchor", "needs_user_decision"}
 VALID_MUSIC_MODES = {"disabled", "local_track", "director_preview"}
-VALID_PERSONA_FORMS = {"full_frame", "dynamic_cutout", "round_window", "square_window", "rectangle_window"}
+VALID_PERSONA_FORMS = {"full_frame", "dynamic_cutout", "round_window", "square_window", "rectangle_window", "voice_only"}
 FUSION_LAYERS = [
     "director_capabilities", "original_performance", "source_audit", "semantic_record", "visual_translation",
     "visual_system", "persona", "components", "mg", "platform", "keyframe_approval",
@@ -46,8 +47,8 @@ def local_dir(value: object, label: str) -> str:
     return str(path)
 
 
-def validate(doc: dict, *, require_source_audit: bool = True) -> dict:
-    required = ("project_name", "aspect", "duration_seconds", "source_video", "remotion_source", "composition", "semantic_units", "references", "director_route", "watermark")
+def validate(doc: dict, *, require_source_audit: bool = True, require_execution: bool = False) -> dict:
+    required = ("project_name", "aspect", "duration_seconds", "remotion_source", "composition", "semantic_units", "references", "director_route", "watermark")
     for key in required:
         if key not in doc:
             fail(f"missing required field: {key}")
@@ -65,7 +66,11 @@ def validate(doc: dict, *, require_source_audit: bool = True) -> dict:
         fail(f"unsupported aspect: {doc['aspect']}")
     if not isinstance(doc["duration_seconds"], (int, float)) or doc["duration_seconds"] <= 0:
         fail("duration_seconds must be positive")
-    doc["source_video"] = local_file(doc["source_video"], "source_video")
+    media_keys = [key for key in ('source_video','source_audio') if doc.get(key)]
+    if len(media_keys) != 1:
+        fail('provide exactly one source_video or source_audio')
+    media_key = media_keys[0]
+    doc[media_key] = local_file(doc[media_key], media_key)
     if doc.get("srt"):
         doc["srt"] = local_file(doc["srt"], "srt")
     if doc.get("source_audit"):
@@ -74,8 +79,8 @@ def validate(doc: dict, *, require_source_audit: bool = True) -> dict:
         if audit["project_name"] != doc["project_name"]:
             fail("source audit project_name does not match fusion input")
         resolved = audit["_resolved_artifacts"]
-        if resolved.get("source_video") != doc["source_video"]:
-            fail("source audit source_video does not match fusion input")
+        if resolved.get(media_key) != doc[media_key]:
+            fail("source audit media does not match fusion input")
         if doc.get("srt") and resolved.get("srt") != doc["srt"]:
             fail("source audit srt does not match fusion input")
         audit_units = {unit["id"]: unit["time"] for unit in audit["semantic_units"]}
@@ -100,14 +105,7 @@ def validate(doc: dict, *, require_source_audit: bool = True) -> dict:
         if unit["id"] in unit_ids:
             fail(f"duplicate semantic unit id: {unit['id']}")
         visual = unit.get("visual", {})
-        if visual.get("visual_source") != "director_generated":
-            fail(f"semantic unit {unit['id']} must use director_generated visual_source")
-        if not isinstance(visual.get("director_asset_id"), str) or not visual["director_asset_id"].strip():
-            fail(f"semantic unit {unit['id']} missing director_asset_id")
-        if visual.get("director_asset_approved") is not True:
-            fail(f"semantic unit {unit['id']} Director asset is not approved")
-        if visual.get("svg_role", "auxiliary_only") != "auxiliary_only":
-            fail(f"semantic unit {unit['id']} cannot use SVG as the main visual")
+        validate_visual(unit)
         unit_ids.add(unit["id"])
         if not isinstance(unit["time"], list) or len(unit["time"]) != 2:
             fail(f"semantic unit {unit['id']} time must be [start, end]")
@@ -126,6 +124,8 @@ def validate(doc: dict, *, require_source_audit: bool = True) -> dict:
         if not isinstance(persona, dict) or not isinstance(persona.get("purpose"), str) or not persona["purpose"].strip():
             fail(f"semantic unit {unit['id']} needs a persona purpose")
         allowed_forms = persona.get("allowed_forms")
+        if media_key == 'source_audio' and allowed_forms != ['voice_only']:
+            fail('audio-only input requires voice_only persona; do not invent a presenter')
         if not isinstance(allowed_forms, list) or not allowed_forms or any(form not in VALID_PERSONA_FORMS for form in allowed_forms):
             fail(f"semantic unit {unit['id']} needs valid allowed dynamic persona forms")
         spans.append((start, end, unit["id"]))
@@ -163,6 +163,13 @@ def validate(doc: dict, *, require_source_audit: bool = True) -> dict:
         if audit_bgm_enabled and audit["_resolved_artifacts"].get("bgm") != music.get("path"):
             fail("fusion input music.path does not match the fingerprinted BGM artifact")
     doc["music"] = music
+    if require_execution:
+        if not require_source_audit:
+            fail('execution needs an approved source audit')
+        expected = execution(doc, audit)
+        if 'execution' in doc and doc['execution'] != expected:
+            fail('execution timeline differs from approved source/captions/cuts; rebuild after review')
+        doc['execution'] = expected
     return doc
 
 
@@ -176,12 +183,12 @@ def main() -> int:
     try:
         if not source.is_file():
             fail(f"input is missing: {source}")
-        doc = validate(json.loads(source.read_text(encoding="utf-8")))
+        doc = validate(json.loads(source.read_text(encoding="utf-8")), require_execution=True)
         if run_dir.exists() and any(run_dir.iterdir()):
             fail(f"run-dir must be new or empty: {run_dir}")
         run_dir.mkdir(parents=True, exist_ok=True)
         manifest = {
-            "schema": "vox-talking-head-fusion/v2",
+            "schema": "vox-talking-head-fusion/v3",
             "created_at": datetime.now(timezone.utc).isoformat(),
             "production_engine": "local_remotion",
             "prohibited_backends": ["tts", "image_to_video", "cloud_assembly"],
@@ -197,6 +204,8 @@ def main() -> int:
         }
         target = run_dir / "fusion-run.json"
         target.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        (run_dir / 'execution.props.json').write_text(json.dumps({'execution':doc['execution']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+        (run_dir / 'edited.srt').write_text(doc['execution']['edited_srt'],encoding='utf-8')
         shutil.copy2(source, run_dir / "input.snapshot.json")
         print(f"Created: {target}")
         return 0

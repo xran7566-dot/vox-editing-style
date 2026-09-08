@@ -46,6 +46,8 @@ python3 scripts/local_preprocess.py captions /path/to/rough-cut-candidates.json 
 
 ## 配音与消耗边界
 
+粗剪后的完整制作必须使用 [v3 制作连接](execution-bridge.md)，不能只创建 cut-timeline.json 却继续渲染未删减的原片。
+
 粗剪保留已有原声，不新增配音来覆盖口误。只有没有可用人声且用户需要时，单独确认文案和音色后接入配音适配器；本次不捆绑 TTS 模型，不默认调用付费服务。
 
 本地转写与音量检测本身由程序计算，不由语言模型逐帧判断；但工具交互、内容理解与校对仍有 Token 消耗。只读摘要、疑点及必要字幕，不反复灌入完整日志或重跑已通过阶段，不承诺固定额度或百分比。

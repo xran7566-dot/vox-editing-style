@@ -2,6 +2,8 @@
 
 `fusion-run.json` is the operational boundary between upstream Director and one talking-head project.
 
+New runs use v3. Read [制作连接](execution-bridge.md) for approved rough-cut runtime props, audio-only input, B-roll and template routes. The old example below illustrates source-time fields only; current required audit/visual fields are validated by the scripts.
+
 ## Input
 
 The bootstrap command reads a JSON file with:
@@ -41,7 +43,7 @@ The bootstrap command reads a JSON file with:
 
 - New v2 runs require a user-approved `vox-source-audit/v1` file. Its local artifact hashes, creator identity, semantic units, blocking issues, and review script are validated before the fusion manifest is created.
 - New v2 runs must explicitly set `music`: default to a local instrumental track; use `disabled` only for an explicit user opt-out.
-- Existing v1 manifests remain readable for regression and repair work, but every newly created run uses `vox-talking-head-fusion/v2`.
+- Existing v1/v2 manifests remain readable for regression and repair; new runs use `vox-talking-head-fusion/v3` and export approved execution props and remapped captions.
 - Do not edit `vendor/vox-director/`.
 - Record exact source paths and active rules.
 - Reject missing source video, missing local Remotion project, invalid aspect, overlapping semantic units, unknown reference scope, duplicated persona in a unit, or unscoped reference.

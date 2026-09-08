@@ -10,7 +10,7 @@
 
 ## 固定调用顺序（不得改路由）
 
-`Director 视觉规则/提示词主导 → 获准的图片生成工具产出 Director 资产 → 本地 Remotion 合成`。
+`Director 视觉规则主导 → 按大纲生产图片／选取合格 B-roll／使用内置模板 → 本地 Remotion 合成`。生图分支仍由 Director 提示词主导，不用其他分支掩盖失败。
 
 - Director 决定主题、媒介、构图、版式、层级和运动意图；图片生成工具只是执行 Director 提示词的资产生产工具，不能反过来主导版式。
 - Remotion 只做本地确定性合成、动态人物窗口、字幕、MG 辅助、时间码对齐和声音层；它不能替代 Director 生成主视觉。
@@ -19,9 +19,9 @@
 
 ## 强制路由
 
-1. 先由 Director 根据每个语义单元生成具体拼贴视觉资产，并记录 `director_asset_id`、来源、提示词、画幅和语义范围。若镜头需要构建式 MG，必须生成可独立控制的组件包或拆层资产，不能只交付一张压平海报。
+1. Director 先确定语义与视觉方案。大纲选用生图的镜头生产拼贴资产并记录 `director_asset_id`、来源、提示词、画幅和语义范围；已批准 B-roll 或内置模板的镜头走 [制作连接](execution-bridge.md)，不要求额外生成无用图片。若镜头需要构建式 MG，必须使用可独立控制的组件包或拆层资产，不能只交付一张压平海报。
 2. 先审核 Director 关键帧是否具备真实图片、纸媒、材质、层级和叙事关系；不合格就重生成，不得进入 Remotion。
-3. Remotion 只能引用已审核的 Director 资产或用户原始素材。它不得凭空用 CSS/SVG 画出主视觉，也不得复制同一张 Director 完整图后通过裁切、放大或遮罩冒充多个图层。
+3. Remotion 只能引用已审核的 Director 资产、用户原始素材、合格 B-roll 或本次选定模板的项目资产。它不得凭空用 CSS/SVG 画出主视觉，也不得复制同一张完整图后通过裁切、放大或遮罩冒充多个图层。
 4. SVG、CSS、路径和 MG 只能作为 Director 画面中的局部辅助层，例如遮罩、连线、进度、局部强调和转场；面积和信息量不得取代主拼贴资产。
 5. Director 生图或资产读取失败时，状态必须为 `blocked: director_asset_missing`，停止制作并报告缺口；禁止自动降级为抽象 SVG、卡片、色块或临时符号。
 
@@ -40,7 +40,7 @@
 
 ## 路由验收字段
 
-每个语义单元必须存在：
+采用 `director_generated` 的语义单元必须存在下列字段；`public_broll` 和 `shotcraft_template` 按 [制作连接](execution-bridge.md) 的来源、实现与批准字段校验，同样受 Director 视觉方案和分层闸门约束：
 
 ```json
 {
@@ -52,6 +52,6 @@
 }
 ```
 
-缺少 `director_asset_id`、`director_asset_approved` 或 `watermark=disabled`，不得启动 Remotion 渲染。
+生图分支缺少 `director_asset_id` 或 `director_asset_approved` 不得渲染；其他分支缺少其来源/模板实现批准同样阻断。所有分支必须保持 `watermark=disabled`。
 
 此外必须提供通过 `scripts/validate_layer_manifest.py` 的 `layer-manifest.json`；该校验未通过时，即使 Director 图片存在，也不得启动 Remotion。
