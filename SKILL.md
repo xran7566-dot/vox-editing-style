@@ -16,6 +16,8 @@ description: 制作或审核保留原声与人物表达的 Vox/编导型口播�
 - **E 分层动画**：读 [分层场景](references/layered-scene-contract.md)；复杂关系再读 [MG 任务单](references/mg-task-card.md)；涉及字幕、进度或声音再读 [字幕·动画·声音](references/subtitle-motion-sound.md)。
 - **F 预览与验收**：读 [审批与验收](references/approval-and-qc.md)；只有发生已知复发问题时才读 [防错闸门](references/recurring-failure-gates.md)。
 
+C 阶段交付方案前执行 [视觉编导的交付前自审](references/visual-direction.md#交付前自审)：概念提纲不能作为执行方案送审；用户指出方案抽象或反复退回时，先修订文件并检查实现证据，再继续预览测试。
+
 只有用户要求完整融合生产时，才读 [完整运行层](references/fusion-operating-model.md) 和 [运行单合约](references/fusion-run-contract.md)。
 
 ## 全阶段硬闸门
