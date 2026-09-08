@@ -10,6 +10,8 @@
 
 Pexels API 与 Pixabay API 是未接通的备用接口，不读取 Key、不出现在当前素材请求中。只有某次具体任务确实需要程序化批量检索，且网站工具无法满足时，才先向用户说明：拟接通的 API、必要性、Key 的本机保存方式、额度和来源展示要求；获得本次明确确认后才能实现和调用。
 
+记录中的 provider/selected_provider 按实际来源填写 `pexels_web` 或 `pixabay_web`；模板默认值不是固定选站要求。Pexels 记录必须填写 `creator`。
+
 ## 何时调用
 
 仅当 Director 的已批准执行大纲为某语义镜头提出具体的公共素材请求时，才使用网站工具。请求须使用 `assets/public-material-request-template.json`，明确时间码、素材职责、检索词、必须满足条件、禁忌和语义理由。

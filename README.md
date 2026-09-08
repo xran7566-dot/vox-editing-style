@@ -70,10 +70,19 @@ Remotion 真实合成关键帧/短片段审核
 
 ## 验证
 
+### 本次补充
+
+- 内置镜头制作：保留镜头卡、产品模板、组件和代码关系，Vox 统一审批与原声时间轴；按需读取，不把镜头库全文塞进入口。见 [内置接入说明](references/shotcraft-integration.md)。
+- [本地转写与粗剪](references/local-transcription-and-rough-cut.md)：用户 SRT 直接使用；无 SRT 优先文案辅助，转写草稿交本人修改确认；Auto-Editor 只提长静音候选，口误、重复与大气口须审核。
+- [公共素材与图片整理](references/public-material-source.md)：Pexels 图片/视频及 Pixabay 图片/视频/音乐/音效作为可选网站来源。API 按需确认后接入。
+- [本次核对及测试范围](references/delivery-checklist-2026-09.md)：区分规则、实测与尚未验证，不声称全库全平台已验收。
+
 发布包包含确定性检查脚本：
 
 ```bash
 python3 scripts/verify_director_vendor.py
+python3 scripts/verify_shotcraft_vendor.py
+python3 scripts/test_local_preprocess.py
 python3 scripts/validate_source_audit.py /absolute/path/to/source-audit.json
 python3 scripts/validate_layer_manifest.py /absolute/path/to/layer-manifest.json --project-root /absolute/path/to/project
 python3 scripts/validate_fusion_run.py /absolute/path/to/fusion-run.json
@@ -98,3 +107,4 @@ python3 scripts/validate_fusion_run.py /absolute/path/to/fusion-run.json
 
 本仓库自身内容采用 MIT License。内置的 `vendor/vox-director` 来自 Alisa Qian 的 MIT 项目，保留了其原始许可证和版权信息。详见 [`NOTICE.md`](NOTICE.md)。
 
+`vendor/video-shotcraft` 来自 Wei Yihao 的 Apache-2.0 项目，保留独立 LICENSE 和原始文件；本仓库 MIT 不覆盖该部分。第三方音频与动态样片未打包，使用模板时需按说明准备合格素材。

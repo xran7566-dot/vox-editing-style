@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 def fail(message: str) -> None:
@@ -29,10 +30,18 @@ def main() -> int:
             fail("只有 qualified 公共素材可以进入分层清单")
         provider = str(record["provider"])
         page_url = str(record["provider_page_url"])
-        if provider != "pixabay_web":
-            fail("当前 Vox 公共素材 provider 必须为 pixabay_web；API 接口尚未接通")
-        if not page_url.startswith("https://pixabay.com/"):
-            fail("来源页必须是 Pixabay HTTPS 页面")
+        hosts = {"pixabay_web": {"pixabay.com", "www.pixabay.com"},
+                 "pexels_web": {"pexels.com", "www.pexels.com"}}
+        if provider not in hosts:
+            fail("当前网站来源必须为 pixabay_web 或 pexels_web；API 需另行接通")
+        parsed = urlparse(page_url)
+        if parsed.scheme != "https" or parsed.hostname not in hosts[provider] or parsed.username or parsed.password:
+            fail("来源页必须为对应素材网站的 HTTPS 页面")
+        if provider == "pexels_web":
+            if record["material_type"] not in {"image", "video", "texture", "cutout"}:
+                fail("Pexels 网站仅用于图片或视频类素材")
+            if not isinstance(record.get("creator"), str) or not record["creator"].strip():
+                fail("Pexels 素材须记录创作者")
         if not str(record["download_url"]).startswith("https://"):
             fail("download_url 必须为 HTTPS URL")
         asset = Path(str(record["asset_path"])).expanduser().resolve()

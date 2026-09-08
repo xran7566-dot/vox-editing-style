@@ -24,6 +24,16 @@ def main() -> int:
     source = Path(args.input).expanduser().resolve()
     output = Path(args.output).expanduser().resolve()
     doc = json.loads(source.read_text(encoding="utf-8"))
+    rough = doc.get("rough_cut_review", {})
+    if rough.get("candidate_path"):
+        candidate = Path(rough["candidate_path"]).expanduser().resolve()
+        if not candidate.is_file():
+            raise SystemExit(f"rough-cut candidates missing: {candidate}")
+        current = digest(candidate)
+        if rough.get("candidate_sha256") and rough["candidate_sha256"] != current:
+            raise SystemExit("rough-cut candidates changed; review again before updating fingerprint")
+        rough["candidate_path"] = str(candidate)
+        rough["candidate_sha256"] = current
     for artifact in doc.get("source_artifacts", []):
         path = Path(str(artifact.get("path", ""))).expanduser().resolve()
         if not path.is_file():
