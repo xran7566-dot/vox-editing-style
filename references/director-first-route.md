@@ -20,7 +20,7 @@
 ## 强制路由
 
 1. Director 先确定语义与视觉方案。大纲选用生图的镜头生产拼贴资产并记录 `director_asset_id`、来源、提示词、画幅和语义范围；已批准 B-roll 或内置模板的镜头走 [制作连接](execution-bridge.md)，不要求额外生成无用图片。若镜头需要构建式 MG，必须使用可独立控制的组件包或拆层资产，不能只交付一张压平海报。
-2. 先审核 Director 关键帧是否具备真实图片、纸媒、材质、层级和叙事关系；不合格就重生成，不得进入 Remotion。
+2. 先内部审核 Director 资产与计划构图；不合格先局部修复或补齐，避免无目的重生成。资产审核后允许 Remotion 静态合成；生成图不等于实际合成关键帧，用户关键帧审核发生在合成后、动态前。
 3. Remotion 只能引用已审核的 Director 资产、用户原始素材、合格 B-roll 或本次选定模板的项目资产。它不得凭空用 CSS/SVG 画出主视觉，也不得复制同一张完整图后通过裁切、放大或遮罩冒充多个图层。
 4. SVG、CSS、路径和 MG 只能作为 Director 画面中的局部辅助层，例如遮罩、连线、进度、局部强调和转场；面积和信息量不得取代主拼贴资产。
 5. Director 生图或资产读取失败时，状态必须为 `blocked: director_asset_missing`，停止制作并报告缺口；禁止自动降级为抽象 SVG、卡片、色块或临时符号。
@@ -52,6 +52,12 @@
 }
 ```
 
-生图分支缺少 `director_asset_id` 或 `director_asset_approved` 不得渲染；其他分支缺少其来源/模板实现批准同样阻断。所有分支必须保持 `watermark=disabled`。
+生图分支缺少 `director_asset_id` 或 `director_asset_approved` 不得动态渲染（内部静帧允许如实检查待审资产）；其他分支缺少其来源/模板实现批准同样阻断。所有分支必须保持 `watermark=disabled`。
 
 此外必须提供通过 `scripts/validate_layer_manifest.py` 的 `layer-manifest.json`；该校验未通过时，即使 Director 图片存在，也不得启动 Remotion。
+
+## 生图到合成的交接
+
+按 [送审证据](review-evidence.md) 保存 `asset-plan.json`：每件资产关联来源/提示词、画面用途、实际尺寸与构图、前后状态、接触/遮挡、文字职责及原声事件。先画出这些关系再生成缺失组件，不以物件数量代替叙事设计。
+
+透明背景需在深、浅底及实际构图中查看边缘、孔洞与遮罩；RGBA、有 alpha、文件存在均不能证明合格。遮罩派生仍归原来源，保留原图并记录实际使用的遮罩文件和观察结果；失败资产不得仅改状态为 approved。

@@ -16,6 +16,7 @@ BASE_MODES = {
     "collage_main_with_presenter",
     "dynamic_cutout_fusion",
     "mixed_by_scene",
+    "presenter_anchor",
 }
 
 
@@ -89,6 +90,17 @@ def main():
             errors.append(prefix + "镜头 id 重复")
         scene_ids.add(scene_id)
 
+        if base_mode == "presenter_anchor":
+            for field in ("timecode", "anchor_reason", "outline_evidence", "source_video", "remotion_component"):
+                if not str(scene.get(field, "")).strip():
+                    errors.append(prefix + "真人锚点缺少 " + field)
+            for field in ("source_video", "remotion_component"):
+                if scene.get(field) and not resolve(root, scene[field]).is_file():
+                    errors.append(prefix + "真人锚点文件不存在: " + scene[field])
+            if any(layer.get("role") in VISUAL_ROLES for layer in scene.get("layers", [])):
+                errors.append(prefix + "真人锚点不得包含拼贴解释层")
+            continue
+
         for field in ("timecode", "mg_task_file", "remotion_component"):
             if not str(scene.get(field, "")).strip():
                 errors.append(prefix + f"缺少 {field}")
@@ -157,7 +169,7 @@ def main():
 
     if errors:
         fail(errors)
-    print(f"PASS: {len(scenes)} 个镜头通过 Vox 分层场景校验。")
+    print(f"PASS: {len(scenes)} 个镜头通过 Vox 结构预检；不代表资产、视觉、声音或用户送审通过。")
 
 
 if __name__ == "__main__":
