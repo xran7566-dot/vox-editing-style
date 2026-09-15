@@ -212,6 +212,7 @@ def validate(root, stage):
         for k in review['keyframes']:
             evidence(k, 'still')
             event = next(e for e in timeline['events'] if e['id']==k['event_id'])
+            need(k['frame']==event['frame'], 'keyframe is not at its semantic event frame')
             need(k['quote']==event['quote'] and all(k.get(v) for v in ('focus','expected_action')), 'missing keyframe annotations')
             need(0<=k['frame']<timeline['duration_frames'], 'keyframe out of range')
             covered.add(k['event_id'])

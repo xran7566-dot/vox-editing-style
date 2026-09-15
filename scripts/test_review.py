@@ -118,6 +118,10 @@ class ReviewGateTest(unittest.TestCase):
     def test_changed_keyframe_invalidates_receipt(self):
         (self.r/'production/evidence/frame.png').write_bytes(b'changed')
         self.blocked('sample-render','changed artifact')
+    def test_keyframe_must_match_event_frame(self):
+        self.edit('semantic-timeline.json',lambda d:d['events'][0].update(frame=31))
+        self.seal(self.r)
+        self.blocked('keyframes','semantic event frame')
     def test_missing_keyframe(self):
         self.edit('review.json',lambda d:d.update(keyframes=[]))
         self.blocked('sample-render','no actual')
