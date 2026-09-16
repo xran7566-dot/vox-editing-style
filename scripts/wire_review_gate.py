@@ -23,9 +23,16 @@ def wire(root, skill):
     build=root/'build-preview.cjs'
     if build.exists():
         s=build.read_text()
-        if '// vox-review-gate' not in s:
-            guard="// vox-review-gate: standalone compilation is a dynamic preview entry\nrequire('child_process').execFileSync('python3', ["+json.dumps(str(skill/'scripts/validate_review.py'))+", '--project-root', __dirname, '--stage', 'sample-review'], {stdio:'inherit'});\n"
-            build.write_text(guard+s)
+        marker='// vox-review-gate: standalone compilation is a dynamic preview entry'
+        if s.startswith(marker+'\n'):
+            lines=s.splitlines(keepends=True)
+            if len(lines)<2 or not lines[1].startswith("require('child_process').execFileSync('python3',"):
+                raise ValueError('Unrecognized existing review guard; inspect before replacing')
+            s=''.join(lines[2:])
+        elif '// vox-review-gate' in s:
+            raise ValueError('Review guard is not at entry; inspect before replacing')
+        guard=marker+"\nrequire('child_process').execFileSync('python3', ["+json.dumps(str(skill/'scripts/validate_review.py'))+", '--project-root', __dirname, '--stage', 'sample-review'], {stdio:'inherit'});\n"
+        build.write_text(guard+s)
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)

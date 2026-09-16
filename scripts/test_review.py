@@ -170,6 +170,19 @@ class ReviewGateTest(unittest.TestCase):
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertTrue(marker.exists())
 
+    def test_wiring_upgrades_legacy_preview_guard(self):
+        from wire_review_gate import wire
+        (self.r/'package.json').write_text('{"scripts":{}}')
+        build=self.r/'build-preview.cjs'
+        build.write_text("// vox-review-gate: standalone compilation is a dynamic preview entry\nrequire('child_process').execFileSync('python3', ['old-validator', '--stage', 'sample-render']);\nconsole.log('existing body');\n")
+        wire(self.r,Path(__file__).resolve().parent.parent)
+        self.assertNotIn('sample-render',build.read_text())
+        self.assertIn('sample-review',build.read_text())
+        self.assertIn("console.log('existing body')",build.read_text())
+        first=build.read_bytes()
+        wire(self.r,Path(__file__).resolve().parent.parent)
+        self.assertEqual(build.read_bytes(),first)
+
     def test_collage_still_requires_layers(self):
         self.edit('layer-manifest.json',lambda d:d['scenes'][0].update(layers=[]))
         self.blocked('compose','structure')
