@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 import subprocess
 import sys
+from validate_shot_plan import validate_shot_plan
 
 STAGES = ('compose', 'keyframes', 'sample-render', 'sample-review', 'final-render', 'final-review')
 
@@ -27,7 +28,7 @@ def fingerprint(root):
     for folder in ('src', 'public'):
         paths.update(p for p in (root / folder).rglob('*') if p.is_file())
     paths.update(p for p in root.glob('*') if p.is_file() and p.suffix in ('.json', '.ts', '.cjs', '.js'))
-    for name in ('layer-manifest.json', 'semantic-timeline.json', 'asset-plan.json'):
+    for name in ('layer-manifest.json', 'semantic-timeline.json', 'asset-plan.json', 'shot-plan.json'):
         p = root / 'production' / name
         if p.exists():
             paths.add(p)
@@ -185,6 +186,8 @@ def validate(root, stage):
                         for source in [layer['source']] + layer.get('variants', []):
                             need((root/source).resolve() in covered_files, 'asset plan does not cover used source: '+source)
         check('asset acceptance', assets)
+    if timeline:
+        check('directing handoff', lambda: validate_shot_plan(root, timeline, read('layer-manifest.json'), stage, artifact, probe))
     if stage=='compose' or errors:
         return errors
     if stage in ('final-render', 'final-review') and timeline.get('scope') != 'full':

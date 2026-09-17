@@ -1,4 +1,4 @@
 interface:
   display_name: "Vox剪辑风格"
-  short_description: "真人口播 Vox 分层拼贴、语义 MG、字幕与声音验收"
-  default_prompt: "使用 $vox-editing-style 处理这条真人口播：先完成资料审核和分层场景清单校验，再制作可独立控制的 Vox 拼贴、MG 动画、字幕与声音。"
+  short_description: "内容编导、逐镜方案、原声与分层合成的分阶段执行检查"
+  default_prompt: "使用 $vox-editing-style。先读取 SKILL.md 并判断阶段；逐镜方案须记录原话、真人选择、时长和画面目的，按 directing-handoff 与 review-evidence 合约通过当前阶段检查后再执行。缺失返回对应阶段补实际产物，不得只凭图层 PASS 开始合成或送审。交付说明已落实的产物和未验证项；实际关键帧须用户认可后才制作带原声短样。"

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "directing_report": {
+    "path": "REPLACE_WITH_REAL_FILE",
+    "sha256": "REPLACE_WITH_REAL_SHA256"
+  },
+  "source_observation": {
+    "path": "REPLACE_WITH_REAL_FILE",
+    "sha256": "REPLACE_WITH_REAL_SHA256"
+  },
+  "source_audio": {
+    "path": "REPLACE_WITH_REAL_FILE",
+    "sha256": "REPLACE_WITH_REAL_SHA256"
+  },
+  "shots": [
+    {
+      "id": "match-timeline-scene-id",
+      "range": [
+        0,
+        60
+      ],
+      "source_cue_ids": [
+        1
+      ],
+      "purpose": null,
+      "persona_mode": null,
+      "persona_reason": null,
+      "framing": null,
+      "main_action": null,
+      "new_information": null,
+      "handoff": null,
+      "visual_family": null,
+      "implementation": {
+        "path": "REPLACE_WITH_REAL_FILE",
+        "sha256": "REPLACE_WITH_REAL_SHA256"
+      }
+    }
+  ]
+}

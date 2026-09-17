@@ -44,6 +44,10 @@ class ReviewGateTest(unittest.TestCase):
         for i,l in enumerate(layers):
             a=copy.deepcopy(base_asset);a['id']='layer-'+str(i);a['file']=ref(l['source']);asset_plan['assets'].append(a)
         save('production/asset-plan.json',asset_plan)
+        save('production/shot-plan.json',{'version':1,'directing_report':ref('production/evidence/qc.md'),'source_observation':ref('production/evidence/qc.md'),'source_audio':ref('public/voice.wav'),'shots':[{'id':'test','range':[0,60],'source_cue_ids':[1],'purpose':'explanation','persona_mode':'voice_only','persona_reason':'synthetic audio-only fixture','framing':'detail','main_action':'connect','new_information':'connection','handoff':'end','visual_family':'diagram','implementation':ref('src/index.tsx')}],'sequence_review':{'decision':'ready_for_user','report':ref('production/evidence/qc.md'),'shot_ids':['test'],'contact_sheets':[ref('production/evidence/frame.png')]}})
+        shot_plan=json.loads((r/'production/shot-plan.json').read_text())
+        save('production/evidence/sequence-review.json',shot_plan.pop('sequence_review'))
+        save('production/shot-plan.json',shot_plan)
         cls.seal(r)
 
     @classmethod
@@ -114,7 +118,7 @@ class ReviewGateTest(unittest.TestCase):
         self.blocked('sample-render','user approval')
     def test_changed_source_invalidates_approval(self):
         (self.r/'src/index.tsx').write_text('// changed')
-        self.blocked('sample-render','stale')
+        self.blocked('sample-render','changed artifact')
     def test_changed_keyframe_invalidates_receipt(self):
         (self.r/'production/evidence/frame.png').write_bytes(b'changed')
         self.blocked('sample-render','changed artifact')
@@ -151,6 +155,7 @@ class ReviewGateTest(unittest.TestCase):
         self.blocked('final-render','only a segment')
     def test_presenter_anchor_without_decorative_layers(self):
         self.edit('layer-manifest.json',lambda d:d['scenes'][0].update(base_mode='presenter_anchor',layers=[],anchor_reason='approved presenter expression',outline_evidence='fixture approved outline',source_video='production/evidence/sample.mp4'))
+        self.edit('shot-plan.json',lambda d:d['shots'][0].update(persona_mode='full',presenter_source={'path':'production/evidence/sample.mp4','sha256':sha(self.r/'production/evidence/sample.mp4')}))
         self.assertEqual(validate(self.r,'compose'),[])
     def test_wired_entrypoints_block_before_execution(self):
         from wire_review_gate import wire
@@ -186,5 +191,44 @@ class ReviewGateTest(unittest.TestCase):
     def test_collage_still_requires_layers(self):
         self.edit('layer-manifest.json',lambda d:d['scenes'][0].update(layers=[]))
         self.blocked('compose','structure')
+
+    def test_missing_directing_handoff_blocks_compose(self):
+        (self.r/'production/shot-plan.json').unlink()
+        self.blocked('compose','shot-plan.json')
+    def test_missing_persona_reason(self):
+        self.edit('shot-plan.json',lambda d:d['shots'][0].pop('persona_reason'))
+        self.blocked('compose','persona_reason')
+    def test_shot_schedule_cannot_disagree(self):
+        self.edit('shot-plan.json',lambda d:d['shots'][0].update(range=[0,30]))
+        self.blocked('compose','duration differs')
+    def test_shot_cues_cannot_be_omitted(self):
+        self.edit('shot-plan.json',lambda d:d['shots'][0].update(source_cue_ids=[]))
+        self.blocked('compose','exact source cues')
+    def test_implementation_changed_requires_reassessment(self):
+        (self.r/'src/index.tsx').write_text('// changed scene')
+        self.blocked('compose','changed artifact')
+    def test_sequence_rejected_despite_technical_readiness(self):
+        self.edit('evidence/sequence-review.json',lambda d:d.update(decision='needs_revision'))
+        self.seal(self.r)
+        self.blocked('keyframes','sequence review needs revision')
+    def test_sequence_sheet_required_before_user_review(self):
+        self.edit('evidence/sequence-review.json',lambda d:d.update(contact_sheets=[]))
+        self.seal(self.r)
+        self.blocked('keyframes','contact sheet')
+    def test_sequence_evidence_does_not_change_render_fingerprint(self):
+        before=fingerprint(self.r)
+        self.edit('evidence/sequence-review.json',lambda d:d.update(decision='needs_revision'))
+        self.assertEqual(fingerprint(self.r),before)
+        self.blocked('keyframes','sequence review needs revision')
+
+    def test_long_shot_requires_review_but_can_pass(self):
+        from validate_shot_plan import validate_shot_plan
+        t=json.loads((self.r/'production/semantic-timeline.json').read_text());m=json.loads((self.r/'production/layer-manifest.json').read_text())
+        t['fps']=5
+        from validate_review import artifact,probe
+        with self.assertRaises((ValueError,KeyError)):
+            validate_shot_plan(self.r,t,m,'compose',artifact,probe)
+        self.edit('shot-plan.json',lambda d:d.update(continuity_review={'path':'production/evidence/qc.md','sha256':sha(self.r/'production/evidence/qc.md'),'shot_ids':['test']}))
+        self.assertTrue(validate_shot_plan(self.r,t,m,'compose',artifact,probe))
 
 if __name__=='__main__': unittest.main(verbosity=2)

@@ -6,8 +6,8 @@
 
 | stage | 用途 | 要求 |
 |---|---|---|
-| compose | 内部实际静态合成 | 结构、资产设计与实际文件、原声与字幕事件表；允许待检资产的内部静态合成 |
-| keyframes | 交付静态关键帧 | 实际 PNG、渲染回执、原话/时间/重点/动作、资产及合成观察报告 |
+| compose | 内部实际静态合成 | 逐镜编导交接、结构、资产设计与实际文件、原声与字幕事件表；允许待检资产的内部静态合成 |
+| keyframes | 交付静态关键帧 | 上项 + 实际 PNG、渲染回执、原话/时间/重点/动作、资产及合成观察报告、整段总览自审 |
 | sample-render | 带声短样制作 | 上项 + 用户明确认可当前关键帧及版本 |
 | sample-review | 带声样片送审、Studio 与播放器 | 上项 + 实际视频、音轨/时长/原声相关性检查 |
 | final-render | 整片制作 | 上项 + 短样用户审核及分轨试听报告；不得把局部测试当整片 |
@@ -17,6 +17,7 @@
 
 ## 工程文件（相对工程根目录）
 
+- `production/shot-plan.json`：强制 [编导执行合约](directing-handoff.md)，逐镜方案与实际时间轴、组件及原片观察绑定；缺失从 compose 起阻断。
 - `production/layer-manifest.json`：原有结构清单。
 - `production/semantic-timeline.json`：`composition, fps, duration_frames, scope`（`full` 或 `segment`）、`original_audio, approved_srt, captions, scenes, events`。文件引用为 `{path, sha256}`。原声是已批准剪辑对应的本地音频/视频；不能用音乐替代。`captions` 指向 JSON cue 数组，每项 `id,text,start_frame,end_frame`，从批准字幕和已确认剪点映射，不重新转写。`approved_srt` 引用用户批准的原字幕；检查 cue 文本一致。`scenes` 每项含 `id,range:[起帧,末帧不含],new_information,relationship,handoff`，须与分层镜头匹配、范围连续；full 覆盖全片。保存映射依据；SRT 只能定位句子，精确字音仍需试听校准。
 - 每个 event：`id,scene_id,cue_id,quote,frame,before,after,information,text_role,relation,sfx,review_required`。句内帧点来自原声校准，动作、文字、接触与音效代码共用 event，不把另一套常数写进组件。`sfx={mode:none,reason:...}` 或 `{mode:file,asset:{path,sha256},frame:事件帧}`。静帧阶段未选音效须明确待办，不能据此声称混音完成。
@@ -27,7 +28,7 @@
 - `keyframe_approval={by:user,decision:approved,project_sha256,artifact_sha256s:[按关键帧顺序],message:{path,sha256},quote,source_reference}`。未收到用户明确认可时不建这项。保留真实消息内容与任务/消息出处，不能拿大纲批准充数。程序核对证据一致性，不赋予代理伪造用户确认的权力。
 - 样片 `sample`、整片 `final` 使用同样文件/回执引用；`sample_approval` 结构同上，绑定样片。`internal_audio_review` 含 `project_sha256,sample_sha256,decision,voice_only,voice_with_sfx,observations,report`。填写实际试听观察，不能只写 passed。
 
-指纹覆盖 src、public、根目录配置、语义表、资产计划、分层表和 MG 任务单；代码、遮罩、字幕、声音或素材变化均使旧回执及审核失效。证据放在 `production/evidence/`，不把它再导入 src 造成循环哈希。外部资产必须以文件引用哈希登记；运行时不依赖远程可变 URL。一次只审核明确范围，扩大范围重新补关键帧；局部 `scope=segment` 不得走整片入口。
+指纹覆盖 src、public、根目录配置、语义表、逐镜方案、资产计划、分层表和 MG 任务单；代码、遮罩、字幕、声音或素材变化均使旧回执及审核失效。证据放在 `production/evidence/`，不把它再导入 src 造成循环哈希。外部资产必须以文件引用哈希登记；运行时不依赖远程可变 URL。一次只审核明确范围，扩大范围重新补关键帧；局部 `scope=segment` 不得走整片入口。
 
 ## 必须接入入口
 
